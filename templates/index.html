@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>陣列知識測驗網站</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 20px auto; padding: 20px; background-color: #f4f4f9; }
+        .quiz-container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1 { color: #333; text-align: center; }
+        .question { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+        .options { margin-top: 10px; }
+        button { display: block; width: 100%; padding: 10px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #218838; }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <h1>陣列單元測驗</h1>
+        <form action="/submit" method="POST">
+            {% for q in questions %}
+            <div class="question">
+                <p><strong>Q{{ q.id }}. {{ q.question }}</strong></p>
+                <div class="options">
+                    {% for opt in q.options %}
+                    <label>
+                        <input type="radio" name="question_{{ q.id }}" value="{{ opt }}" required> {{ opt }}
+                    </label><br>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+            <button type="submit">提交測驗</button>
+        </form>
+    </div>
+</body>
+</html>

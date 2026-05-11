@@ -2,35 +2,133 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>陣列知識測驗網站</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>資料結構與演算法 - 陣列單元測驗</title>
     <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 20px auto; padding: 20px; background-color: #f4f4f9; }
-        .quiz-container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        h1 { color: #333; text-align: center; }
-        .question { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
-        .options { margin-top: 10px; }
-        button { display: block; width: 100%; padding: 10px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
-        button:hover { background: #218838; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
+        .quiz-card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 700px; width: 100%; position: relative; }
+        h1 { text-align: center; color: #1a73e8; margin-bottom: 5px; }
+        .timer-box { position: sticky; top: 10px; background: #ff4d4f; color: white; padding: 10px 20px; border-radius: 20px; font-weight: bold; text-align: center; font-size: 18px; margin-bottom: 20px; z-index: 100; box-shadow: 0 4px 6px rgba(0,0,0,0.15); }
+        .question { margin-bottom: 25px; padding: 20px; border-left: 5px solid #1a73e8; background: #f8f9fa; border-radius: 0 8px 8px 0; }
+        .options label { display: block; margin: 12px 0; cursor: pointer; padding: 10px; border: 1px solid #ddd; border-radius: 6px; transition: 0.2s; background: white; }
+        .options label:hover { background: #e8f0fe; border-color: #1a73e8; }
+        .options input { margin-right: 10px; }
+        button.submit-btn { width: 100%; padding: 15px; background: #1a73e8; color: white; border: none; border-radius: 6px; font-size: 18px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        button.submit-btn:hover { background: #1557b0; }
+        #result { margin-top: 30px; padding: 25px; border-radius: 8px; display: none; background: #e8f0fe; border: 1px solid #b3d7ff; }
+        .correct { color: #28a745; font-weight: bold; }
+        .wrong { color: #dc3545; font-weight: bold; }
+        .desc { background: #fff; padding: 10px; border-radius: 4px; margin-top: 5px; border-left: 3px solid #6c757d; font-size: 14px; color: #555; }
     </style>
 </head>
 <body>
-    <div class="quiz-container">
-        <h1>陣列單元測驗</h1>
-        <form action="/submit" method="POST">
-            {% for q in questions %}
-            <div class="question">
-                <p><strong>Q{{ q.id }}. {{ q.question }}</strong></p>
-                <div class="options">
-                    {% for opt in q.options %}
-                    <label>
-                        <input type="radio" name="question_{{ q.id }}" value="{{ opt }}" required> {{ opt }}
-                    </label><br>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endfor %}
-            <button type="submit">提交測驗</button>
+    <div class="quiz-card">
+        <div class="timer-box">剩餘時間：<span id="time-display">20:00</span></div>
+        <h1>陣列與資料結構單元測驗</h1>
+        <p style="text-align: center; color: #666; margin-bottom: 30px;">請在限時內完成以下 22 題單選題</p>
+        
+        <form id="quiz-form">
+            <div id="quiz-content"></div>
+            <button type="submit" class="submit-btn">提交測驗</button>
         </form>
+        
+        <div id="result"></div>
     </div>
+
+    <script>
+        // 完全復原你的 22 題題目
+        const questions = [
+            { id: 1, q: "「陣列」是屬於下列何種資料結構？", options: ["A. 線性", "B. 靜態", "C. 動態", "D. 以上皆非"], ans: "B" },
+            { id: 2, q: "承上題，若是「以行為主」的記憶體配置，則 A[1][2] 的位址為何？", options: ["A. 1012", "B. 1016", "C. 1024", "D. 1020", "E. 以上皆非"], ans: "E" },
+            { id: 3, q: "若某「一維陣列」的長度為 100，每個元素需要 4 個位元組 (bytes)，則儲存這個陣列共需多少位元組 (bytes)？", options: ["A. 100", "B. 200", "C. 400", "D. 800"], ans: "C" },
+            { id: 4, q: "「陣列」在存取某元素時，時間複雜度為何？", options: ["A. O(1)", "B. O(log n)", "C. O(n)", "D. O(n^2)"], ans: "A" },
+            { id: 5, q: "若某「二維陣列」A的維度為 3*3，物理位址為 1,000，每個元素均為整數，需要 4 個位元組 (bytes) 儲存。若是「以列為主」的記憶體配置，則 A[1][2] 的位址為何？", options: ["A. 1008", "B. 1012", "C. 1016", "D. 1020"], ans: "D" },
+            { id: 6, q: "「魔術方塊」（幻方）的特性為何？", options: ["A. 列的總和不等於行的總和", "B. 列、行或對角線的總和都相等", "C. 魔術方塊內的數字必須互不相同且大於100", "D. 魔術方塊內的數字均為奇數"], ans: "B" },
+            { id: 7, q: "某農夫有一個籠子，裡面有雞和兔子。已知總共有 30 隻，且總共有 80 隻腳。請問籠子裡有幾隻兔子？", options: ["A. 10", "B. 15", "C. 20", "D. 25"], ans: "A" },
+            { id: 8, q: "「矩陣乘法」的演算法中包含三個嵌套迴圈（Nested Loops），則其時間複雜度為何？", options: ["A. O(n)", "B. O(n log n)", "C. O(n^2)", "D. O(n^3)"], ans: "D" },
+            { id: 9, q: "請問「騎士巡邏」問題的目的為何？", options: ["A. 找到一條最快吃掉對方國王的路徑", "B. 找到一條路徑，從出發點開始，每個格子只能走訪一次，且所有的格子都走訪完"], ans: "B" },
+            { id: 10, q: "考慮 n*n 的棋盤，則「騎士巡邏」問題的可能解有幾種？", options: ["A. 只有一種", "B. n 種", "C. 無窮多種", "D. 不一定，視騎士的出發點而定"], ans: "D" },
+            { id: 11, q: "考慮下列的多項式：p1(x) = 3x^3 + 2x^2 - x + 5, p2(x) = x^3 - 4x^2 + 2x - 3，則多項式加法 p1(x) + p2(x) 的結果為何？", options: ["A. 4x^3 + 2x^2 + x + 2", "B. 4x^3 - 2x^2 - x + 2", "C. 4x^3 - 2x^2 + x + 2", "D. 4x^3 + 6x^2 + x + 8"], ans: "C" },
+            { id: 12, q: "若多項式的最高次數為 n，則 Horner's Rule（秦九韶算法）的時間複雜度為何？", options: ["A. O(1)", "B. O(n)", "C. O(n^2)", "D. O(2^n)"], ans: "B" },
+            { id: 13, q: "「鏈結串列」（Linked List）中，每個節點（Node）除了儲存資料外，還必須儲存什麼？", options: ["A. 索引值", "B. 指向下一個節點的指標 (Pointer/Link)", "C. 陣列的長度", "D. 記憶體的初始位址"], ans: "B" },
+            { id: 14, q: "在「單向鏈結串列」中插入或刪除一個節點的時間複雜度（已知目標位置）為何？", options: ["A. O(1)", "B. O(log n)", "C. O(n)", "D. O(n^2)"], ans: "A" },
+            { id: 15, q: "「堆疊」（Stack）資料結構遵循下列哪一種存取原則？", options: ["A. FIFO (First-In, First-Out)", "B. LIFO (Last-In, First-Out)", "C. LILO (Last-In, Last-Out)", "D. 隨機存取"], ans: "B" },
+            { id: 16, q: "「佇列」（Queue）資料結構遵循下列哪一種存取原則？", options: ["A. FIFO (First-In, First-Out)", "B. LIFO (Last-In, First-Out)", "C. FILO (First-In, Last-Out)", "D. 隨機存取"], ans: "A" },
+            { id: 17, q: "在堆疊（Stack）中，將資料放入堆疊的操作稱物理名為何？", options: ["A. Pop", "B. Push", "C. Insert", "D. Enqueue"], ans: "B" },
+            { id: 18, q: "若將表達式 (A + B) * C 轉換為「後序式」（Postfix），結果為何？", options: ["A. +AB*C", "B. AB+C*", "C. ABC*+", "D. *+ABC"], ans: "B" },
+            { id: 19, q: "二元樹（Binary Tree）中，一個節點最多可以有幾個子節點（Children）？", options: ["A. 1 個", "B. 2 個", "C. 3 個", "D. 無限制"], ans: "B" },
+            { id: 20, q: "一棵高度為 h 的滿二元樹（Full Binary Tree），其總節點數為多少？", options: ["A. 2^h", "B. 2^h - 1", "C. 2^(h-1)", "D. h^2"], ans: "B" },
+            { id: 21, q: "若對二元樹進行「中序走訪」（Inorder Traversal），走訪順序為何？", options: ["A. 左子樹 -> 根節點 -> 右子樹", "B. 根節點 -> 左子樹 -> 右子樹", "C. 左子樹 -> 右子樹 -> 根節點", "D. 根節點 -> 右子樹 -> 左子樹"], ans: "A" },
+            { id: 22, q: "若多項式的次數為 n，則 Horner’s Rule 的時間複雜度為何？", options: ["A. O(1)", "B. O(n)", "C. O(n^2)", "D. O(2^n)", "E. 以上皆非"], ans: "B" }
+        ];
+
+        // 渲染題目
+        const container = document.getElementById('quiz-content');
+        questions.forEach((item, index) => {
+            let html = `<div class="question" id="q-block-${item.id}"><p><strong>Q${index + 1}. ${item.q}</strong></p><div class="options">`;
+            item.options.forEach(opt => {
+                // 選項文字的第一個字（A, B, C, D, E）即為答案代碼
+                const optLetter = opt.charAt(0);
+                html += `<label><input type="radio" name="q_${item.id}" value="${optLetter}" required> ${opt}</label>`;
+            });
+            html += `</div></div>`;
+            container.innerHTML += html;
+        });
+
+        // 倒計時器設定 (20分鐘 = 1200秒)
+        let timeLeft = 1200; 
+        const timeDisplay = document.getElementById('time-display');
+        
+        const timerInterval = setInterval(() => {
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                alert("時間到！系統已自動提交答案。");
+                document.getElementById('quiz-form').dispatchEvent(new Event('submit'));
+            } else {
+                timeLeft--;
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                timeDisplay.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            }
+        }, 1000);
+
+        // 提交表單與計分
+        document.getElementById('quiz-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            clearInterval(timerInterval); // 停止計時
+
+            let score = 0;
+            let resultHTML = `<h2>測驗結果</h2>`;
+            
+            questions.forEach(item => {
+                const selected = document.querySelector(`input[name="q_${item.id}"]:checked`);
+                const userAns = selected ? selected.value : "未作答";
+                const isCorrect = userAns === item.ans;
+                
+                if (isCorrect) {
+                    score++;
+                }
+                
+                resultHTML += `
+                    <div style="margin-bottom: 15px; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
+                        <p><strong>Q${item.id}. ${item.q}</strong></p>
+                        <p>你的答案：<span class="${isCorrect ? 'correct' : 'wrong'}">${userAns}</span> 
+                        ${isCorrect ? ' (✔ 正確)' : ' (✘ 錯誤，正確答案是 ' + item.ans + ')'}</p>
+                    </div>
+                `;
+            });
+
+            const finalScore = Math.round((score / questions.length) * 100);
+            resultHTML = `<h3>答對題數：${score} / ${questions.length} (得分：${finalScore} 分)</h3>` + resultHTML;
+            
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = resultHTML;
+            resultDiv.style.display = 'block';
+            
+            // 隱藏提交按鈕
+            document.querySelector('.submit-btn').style.display = 'none';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    </script>
 </body>
 </html>
